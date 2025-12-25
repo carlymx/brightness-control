@@ -1,0 +1,9 @@
+{
+  "uuid": "brightness-control@carlymx",
+  "name": "Brightness Control",
+  "description": "Control de brillo para monitores de escritorio",
+  "icon": "display-brightness",
+  "max-instances": -1,
+  "version": "1.0.0",
+  "gettext-domain": "brightness-control@carlymx"
+}

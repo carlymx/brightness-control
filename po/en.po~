@@ -1,0 +1,66 @@
+# English translations for PACKAGE package.
+# Copyright (C) 2025 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Automatically generated, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-12-25 19:32+0100\n"
+"PO-Revision-Date: 2025-12-25 19:32+0100\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: brightness-control@carlymx/applet.js:49
+msgid "Control de Brillo"
+msgstr "Control de Brillo"
+
+#: brightness-control@carlymx/applet.js:55
+msgid "☀  Brillo"
+msgstr "☀  Brillo"
+
+#: brightness-control@carlymx/applet.js:62
+msgid "Brillo: 50%"
+msgstr "Brillo: 50%"
+
+#: brightness-control@carlymx/applet.js:68
+msgid "🌙  Temperatura"
+msgstr "🌙  Temperatura"
+
+#: brightness-control@carlymx/applet.js:75
+msgid "Temperatura: Natural"
+msgstr "Temperatura: Natural"
+
+#: brightness-control@carlymx/applet.js:81
+msgid "Monitor: Auto"
+msgstr "Monitor: Auto"
+
+#: brightness-control@carlymx/applet.js:85
+msgid "Cambiar Monitor"
+msgstr "Cambiar Monitor"
+
+#: brightness-control@carlymx/applet.js:91
+msgid "Restablecer"
+msgstr "Restablecer"
+
+#: brightness-control@carlymx/applet.js:119
+#: brightness-control@carlymx/applet.js:290
+#: brightness-control@carlymx/applet.js:321
+#, javascript-format
+msgid "Brillo: %d%%"
+msgstr "Brillo: %d%%"
+
+#: brightness-control@carlymx/applet.js:203
+msgid "Brillo: 100%"
+msgstr "Brillo: 100%"
+
+#: brightness-control@carlymx/applet.js:266
+#, javascript-format
+msgid "Monitor: %s"
+msgstr "Monitor: %s"
