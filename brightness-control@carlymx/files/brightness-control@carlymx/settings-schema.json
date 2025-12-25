@@ -1,0 +1,41 @@
+{
+  "min-brightness": {
+    "type": "scale",
+    "default": 30,
+    "min": 0,
+    "max": 50,
+    "step": 5,
+    "description": "Brillo mínimo (%)"
+  },
+  "use-ddcutil": {
+    "type": "switch",
+    "default": true,
+    "description": "Usar ddcutil (hardware control)"
+  },
+  "realtime-update": {
+    "type": "switch",
+    "default": false,
+    "description": "Actualizar mientras deslizas"
+  },
+  "selected-monitor": {
+    "type": "generic",
+    "default": "auto",
+    "description": "Monitor seleccionado"
+  },
+  "saved-brightness": {
+    "type": "scale",
+    "default": 100,
+    "min": 0,
+    "max": 100,
+    "step": 1,
+    "description": "Último brillo guardado"
+  },
+  "saved-temperature": {
+    "type": "scale",
+    "default": 0.5,
+    "min": 0,
+    "max": 1,
+    "step": 0.01,
+    "description": "Última temperatura guardada"
+  }
+}
