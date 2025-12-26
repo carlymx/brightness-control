@@ -23,10 +23,19 @@ Prueba específica: Click applet → mover slider → verificar monitor cambia y
 ## Code Style Guidelines
 
 ### Formatting
-- Indentación: 4 espacios, máx 120 caracteres, braces misma línea, semicolons siempre, SIN comentarios innecesarios
+- Indentación: 4 espacios, máx 120 caracteres por línea
+- Braces: misma línea para funciones y bloques de control
+- Semicolons: siempre al final de statements
+- SIN comentarios innecesarios - código debe ser autoexplicativo
+- Líneas en blanco: una línea entre funciones, ninguna entre bloques relacionados
 
-### Naming
-- Classes: PascalCase, Functions: camelCase, Variables: camelCase, Private: `_prefix`, Constants: UPPER_SNAKE_CASE
+### Naming Conventions
+- **Classes**: PascalCase (ej: `MyApplet`)
+- **Functions**: camelCase (ej: `setBrightness`, `_connectSliderEvents`)
+- **Variables**: camelCase (ej: `brightnessValue`, `selectedMonitor`)
+- **Private members**: prefijo `_` (ej: `_brightnessTimeout`, `_monitors`)
+- **Constants**: UPPER_SNAKE_CASE (ej: `MIN_BRIGHTNESS`, `TIMEOUT_DELAY`)
+- **Event handlers**: prefijo `on_` para públicos, `_on` para privados (ej: `on_applet_clicked`, `_onSliderChanged`)
 
 ### Imports Order
 ```javascript
@@ -43,6 +52,13 @@ function _(str) {
 }
 ```
 
+### Types and Validation
+- **Type checking**: Usar `typeof` para validación de tipos básicos
+- **Number conversion**: `parseInt()` para enteros, `parseFloat()` para decimales
+- **Range validation**: Verificar rangos 0-100 para porcentajes, 0-1 para valores normalizados
+- **Null/undefined handling**: Verificar existencia antes de usar propiedades
+- **Array validation**: Verificar `length > 0` antes de acceder a índices
+
 ### Error Handling
 ```javascript
 try {
@@ -58,10 +74,7 @@ try {
 }
 ```
 
-### Validation
-- Usar `parseInt()`/`parseFloat()` para conversión, validar rangos 0-100, verificar `typeof`, manejar null/undefined
-
-### Structure
+### Structure and Architecture
 ```javascript
 function MyApplet(orientation, panelHeight, instanceId) {
     this._init(orientation, panelHeight, instanceId);
@@ -69,9 +82,19 @@ function MyApplet(orientation, panelHeight, instanceId) {
 
 MyApplet.prototype = {
     __proto__: Applet.IconApplet.prototype,
-    _init: function(orientation, panelHeight, instanceId) {},
-    on_applet_clicked: function(event) { this.menu.toggle(); },
-    _setBrightness: function(value) {},
+
+    _init: function(orientation, panelHeight, instanceId) {
+        // Inicialización completa aquí
+    },
+
+    on_applet_clicked: function(event) {
+        this.menu.toggle();
+    },
+
+    _setBrightness: function(value) {
+        // Lógica de negocio aquí
+    },
+
     destroy: function() {
         this._cleanupTimeouts();
         this._disconnectSliderEvents();
@@ -88,6 +111,7 @@ function main(metadata, orientation, panelHeight, instanceId) {
 - Usar función `_()` para todas las strings de UI: `_("Texto")`
 - `GLib.vsprintf()` para strings con variables: `GLib.vsprintf(_("Brillo: %d%%"), [value])`
 - Archivos de traducción: `po/{en,es}.po`
+- Bindtextdomain: configurar en `_init()` con `Gettext.bindtextdomain()`
 
 ## Project-Specific Rules
 
@@ -150,6 +174,25 @@ global.log("Debug");
 global.logError("Error:", error);
 // Looking Glass: Alt+F2 → lg
 ```
+
+## ESLint Configuration
+- **Archivo**: `eslint.config.js`
+- **Reglas específicas**:
+  - `no-console`: off (permite console.log)
+  - `no-unused-vars`: warn (avisa sobre variables no usadas)
+- **Globals definidos**: Applet, PopupMenu, GLib, Gio, St, Settings, Gettext, _, global
+
+## Security Best Practices
+- **Command injection**: Siempre usar GLib.spawn_command_line_sync() con strings estáticas
+- **Input validation**: Validar rangos de valores antes de usarlos en comandos
+- **Error logging**: No loggear información sensible o credenciales
+- **File paths**: Usar rutas absolutas, evitar concatenación insegura
+
+## Performance Considerations
+- **Debouncing**: Usar timeouts de 150ms para evitar llamadas excesivas
+- **Memory management**: Limpiar timeouts y desconectar eventos en destroy()
+- **Efficient updates**: Actualizar UI solo cuando sea necesario
+- **Resource cleanup**: Liberar recursos en el método destroy()
 
 ## Resources
 - [Cinnamon Applet Tutorial](https://projects.linuxmint.com/reference/git/cinnamon-tutorials/write-applet.html)
