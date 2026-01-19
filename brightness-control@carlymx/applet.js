@@ -6,6 +6,26 @@ const Settings = imports.ui.settings;
 const St = imports.gi.St;
 const Gettext = imports.gettext;
 
+/*
+ * Brightness Control Applet for Cinnamon
+ * Author: carlymx
+ * Date: 2025-12-26
+ * Version: 1.2.0
+ */
+
+const VCP = {
+    BRIGHTNESS: "10",
+    RED: "16",
+    GREEN: "18",
+    BLUE: "1A",
+    COLOR_PRESET: "14"
+};
+
+const DDCUTIL = {
+    USER_MODE: "0x0b",
+    DEFAULT_TEMP: "0x05"
+};
+
 function _(str) {
     return Gettext.dgettext("brightness-control@carlymx", str);
 }
@@ -44,6 +64,7 @@ MyApplet.prototype = {
         this._brightnessTimeout = null;
         this._tempTimeout = null;
         this._monitors = [];
+        this._ddcutilUserModeActive = false;
 
         this.set_applet_icon_name("display-brightness");
         this.set_applet_tooltip(_("Control de Brillo"));
@@ -201,12 +222,33 @@ MyApplet.prototype = {
         this._brightnessSlider.setValue(1.0);
         this._tempSlider.setValue(0.5);
         this._brightnessLabel.label.text = _("Brillo: 100%");
+
         let warmPercent = Math.round((1.0 - 0.5) * 100);
         let coldPercent = Math.round(0.5 * 100);
         this._tempLabel.label.text = warmPercent + "% - Luz cálida - 0 - Luz fría " + coldPercent + "%";
+
         this.selectedMonitor = "auto";
         this.settings.setValue("selected-monitor", "auto");
         this._updateMonitorLabel();
+
+        let targets = this._getMonitorTargets();
+
+        this._resetXrandr(targets);
+
+        if (this.useDdcutil) {
+            for (let target of targets) {
+                if (target !== "auto") {
+                    let idx = this._monitors.indexOf(target) + 1;
+                    GLib.spawn_command_line_sync(`ddcutil -d ${idx} setvcp ${VCP.COLOR_PRESET} ${DDCUTIL.DEFAULT_TEMP}`);
+                    GLib.spawn_command_line_sync(`ddcutil -d ${idx} setvcp ${VCP.BRIGHTNESS} 100`);
+                } else {
+                    GLib.spawn_command_line_sync(`ddcutil setvcp ${VCP.COLOR_PRESET} ${DDCUTIL.DEFAULT_TEMP}`);
+                    GLib.spawn_command_line_sync(`ddcutil setvcp ${VCP.BRIGHTNESS} 100`);
+                }
+            }
+            this._ddcutilUserModeActive = false;
+        }
+
         this._setBrightness(100);
     },
 
@@ -299,94 +341,6 @@ MyApplet.prototype = {
         this.savedTemperature = this._tempSlider._value;
     },
 
-    _getCurrentBrightness: function() {
-        if (this.useDdcutil) {
-            try {
-                let cmd = "ddcutil getvcp 10";
-                if (this.selectedMonitor !== "auto") {
-                    let monitorIndex = this._monitors.indexOf(this.selectedMonitor);
-                    if (monitorIndex !== -1) {
-                        cmd = `ddcutil -d ${monitorIndex + 1} getvcp 10`;
-                    }
-                }
-
-                let [success, stdout, stderr] = GLib.spawn_command_line_sync(cmd);
-                if (success) {
-                    let output = String(stdout);
-                    let match = output.match(/current value = ([0-9]+)/);
-                    if (match) {
-                        let value = parseInt(match[1]);
-                        let normalized = value / 100;
-                        this._brightnessSlider.setValue(normalized);
-                        this._brightnessLabel.label.text = _("Brillo: ") + value + "%";
-                    }
-                }
-            } catch (e) {
-                global.logError("Error obteniendo brillo actual:", e);
-            }
-        }
-    },
-
-    _setBrightness: function(value) {
-        this._saveValues();
-
-        if (this.useDdcutil) {
-            try {
-                let cmd = `ddcutil setvcp 10 ${value}`;
-                if (this.selectedMonitor !== "auto") {
-                    let monitorIndex = this._monitors.indexOf(this.selectedMonitor);
-                    if (monitorIndex !== -1) {
-                        cmd = `ddcutil -d ${monitorIndex + 1} setvcp 10 ${value}`;
-                    }
-                }
-
-                let [success, stdout, stderr] = GLib.spawn_command_line_sync(cmd);
-                if (!success) {
-                    global.logError("Error ejecutando ddcutil:", stderr);
-                    this._setXrandrBrightness(value);
-                }
-            } catch (e) {
-                global.logError("Excepción ejecutando ddcutil:", e);
-                this._setXrandrBrightness(value);
-            }
-        } else {
-            this._setXrandrBrightness(value);
-        }
-    },
-
-    _setXrandrBrightness: function(value) {
-        let targets = this._getMonitorTargets();
-        let normalized = value / 100;
-        let tempValue = this._tempSlider._value;
-        let red, green, blue;
-
-        if (tempValue < 0.5) {
-            let warmth = 1.0 - (tempValue * 2);
-            red = 1.0;
-            green = 1.0 - (warmth * 0.1);
-            blue = 1.0 - (warmth * 0.5);
-        } else {
-            let coolness = (tempValue - 0.5) * 2;
-            red = 1.0 - (coolness * 0.3);
-            green = 1.0 - (coolness * 0.1);
-            blue = 1.0;
-        }
-
-        let cmdParts = [];
-        for (let i = 0; i < targets.length; i++) {
-            cmdParts.push(`--output ${targets[i]} --brightness ${normalized} --gamma ${red}:${green}:${blue}`);
-        }
-
-        if (cmdParts.length > 0) {
-            try {
-                let cmd = `xrandr ${cmdParts.join(' ')}`;
-                GLib.spawn_command_line_sync(cmd);
-            } catch (e) {
-                global.logError("Error ejecutando xrandr:", e);
-            }
-        }
-    },
-
     _getMonitorTargets: function() {
         if (this.selectedMonitor !== "auto") {
             return [this.selectedMonitor];
@@ -394,9 +348,54 @@ MyApplet.prototype = {
         return this._monitors;
     },
 
-    _setTemperature: function(value) {
+    _getDdcutilCommand: function(vcpCode, value, target) {
+        if (target !== "auto") {
+            let idx = this._monitors.indexOf(target) + 1;
+            return `ddcutil -d ${idx} setvcp ${vcpCode} ${value}`;
+        }
+        return `ddcutil setvcp ${vcpCode} ${value}`;
+    },
+
+    _setBrightness: function(value) {
         this._saveValues();
+
+        if (this.useDdcutil) {
+            this._setBrightnessDdcutil(value);
+        } else {
+            this._setBrightnessXrandr(value);
+        }
+    },
+
+    _setBrightnessDdcutil: function(value) {
         let targets = this._getMonitorTargets();
+        this._resetXrandr(targets);
+
+        for (let target of targets) {
+            let cmd = this._getDdcutilCommand(VCP.BRIGHTNESS, value, target);
+            GLib.spawn_command_line_sync(cmd);
+        }
+    },
+
+    _setBrightnessXrandr: function(value) {
+        let targets = this._getMonitorTargets();
+        let brightnessNormalized = value / 100;
+        let tempValue = this._tempSlider._value;
+        let rgb = this._calcularRGBDesdeTemperatura(tempValue);
+
+        for (let target of targets) {
+            let cmd = `xrandr --output ${target} --brightness ${brightnessNormalized} --gamma ${rgb.red}:${rgb.green}:${rgb.blue}`;
+            GLib.spawn_command_line_sync(cmd);
+        }
+    },
+
+    _resetXrandr: function(targets) {
+        for (let target of targets) {
+            GLib.spawn_command_line_sync(`xrandr --output ${target} --gamma 1:1:1`);
+            GLib.spawn_command_line_sync(`xrandr --output ${target} --brightness 1.0`);
+        }
+    },
+
+    _calcularRGBDesdeTemperatura: function(value) {
         let red, green, blue;
 
         if (value < 0.5) {
@@ -411,71 +410,67 @@ MyApplet.prototype = {
             blue = 1.0;
         }
 
-        let brightness = this._brightnessSlider._value;
-        let brightnessNormalized = brightness;
-
-        let cmdParts = [];
-        for (let i = 0; i < targets.length; i++) {
-            cmdParts.push(`--output ${targets[i]} --brightness ${brightnessNormalized} --gamma ${red}:${green}:${blue}`);
-        }
-
-        if (cmdParts.length > 0) {
-            try {
-                let cmd = `xrandr ${cmdParts.join(' ')}`;
-                GLib.spawn_command_line_sync(cmd);
-            } catch (e) {
-                global.logError("Error ejecutando xrandr temperatura:", e);
-            }
-        }
+        return { red: red, green: green, blue: blue };
     },
 
     _setTemperature: function(value) {
-        try {
-            let [success, xrandrOutput, xrandrError] = GLib.spawn_command_line_sync("xrandr --current");
+        this._saveValues();
 
-            if (success) {
-                let lines = String(xrandrOutput).split('\n');
-                let outputName = null;
-
-                for (let i = 0; i < lines.length; i++) {
-                    if (lines[i].includes(' connected')) {
-                        outputName = lines[i].split(' ')[0];
-                        break;
-                    }
-                }
-
-                if (outputName) {
-                    let red, green, blue;
-
-                    if (value < 0.5) {
-                        let warmth = 1.0 - (value * 2);
-                        red = 1.0;
-                        green = 1.0 - (warmth * 0.1);
-                        blue = 1.0 - (warmth * 0.5);
-                    } else {
-                        let coolness = (value - 0.5) * 2;
-                        red = 1.0 - (coolness * 0.3);
-                        green = 1.0 - (coolness * 0.1);
-                        blue = 1.0;
-                    }
-
-                    let brightness = this._brightnessSlider._value;
-                    let brightnessNormalized = brightness;
-                    let cmd = `xrandr --output ${outputName} --brightness ${brightnessNormalized} --gamma ${red}:${green}:${blue}`;
-                    GLib.spawn_command_line_sync(cmd);
-                    global.log("xrandr: temperatura cambiada a", red, green, blue);
-                } else {
-                    global.logError("No se encontró monitor conectado para temperatura");
-                }
-            }
-        } catch (e) {
-            global.logError("Error ejecutando xrandr temperatura:", e);
+        if (this.useDdcutil) {
+            this._setTemperatureDdcutil(value);
+        } else {
+            this._setTemperatureXrandr(value);
         }
     },
 
-    _reapplyTemperature: function() {
-        let tempValue = this._tempSlider._value;
-        this._setTemperature(tempValue);
+    _setTemperatureDdcutil: function(value) {
+        let targets = this._getMonitorTargets();
+        let rgb = this._calcularRGBDesdeTemperatura(value);
+
+        this._resetXrandr(targets);
+        this._activarModoUsuarioDdcutil(targets);
+
+        for (let target of targets) {
+            GLib.spawn_command_line_sync(this._getDdcutilCommand(VCP.RED, Math.round(rgb.red * 100), target));
+            GLib.spawn_command_line_sync(this._getDdcutilCommand(VCP.GREEN, Math.round(rgb.green * 100), target));
+            GLib.spawn_command_line_sync(this._getDdcutilCommand(VCP.BLUE, Math.round(rgb.blue * 100), target));
+        }
+    },
+
+    _activarModoUsuarioDdcutil: function(targets) {
+        if (this._ddcutilUserModeActive) return;
+
+        for (let target of targets) {
+            let cmd = this._getDdcutilCommand(VCP.COLOR_PRESET, DDCUTIL.USER_MODE, target);
+            GLib.spawn_command_line_sync(cmd);
+        }
+
+        this._ddcutilUserModeActive = true;
+
+        try {
+            if (global.notify_notification_new) {
+                global.notify_notification_new(_("Brillo Control"), _("Modo de control manual de temperatura activado (User 1)"), "display-brightness");
+            } else if (global.log) {
+                global.log("Brightness Control: Modo User 1 de ddcutil activado");
+            }
+        } catch (e) {
+            global.log("Brightness Control: Modo User 1 de ddcutil activado");
+        }
+    },
+
+    _setTemperatureXrandr: function(value) {
+        let targets = this._getMonitorTargets();
+        let rgb = this._calcularRGBDesdeTemperatura(value);
+        let brightnessNormalized = this._brightnessSlider._value;
+
+        for (let target of targets) {
+            let cmd = `xrandr --output ${target} --brightness ${brightnessNormalized} --gamma ${rgb.red}:${rgb.green}:${rgb.blue}`;
+            GLib.spawn_command_line_sync(cmd);
+        }
+    },
+
+    _onOpenGitHubClicked: function() {
+        GLib.spawn_command_line_sync("xdg-open https://github.com/carlymx/brightness-control");
     },
 
     destroy: function() {

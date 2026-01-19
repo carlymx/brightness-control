@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-12-25 20:09+0100\n"
-"PO-Revision-Date: 2025-12-25 19:32+0100\n"
+"POT-Creation-Date: 2025-12-26 00:00+0100\n"
+"PO-Revision-Date: 2025-12-26 00:00+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: en\n"
@@ -71,3 +71,19 @@ msgstr "Brightness: 100%"
 #, javascript-format
 msgid "Monitor: %s"
 msgstr "Monitor: %s"
+
+#: brightness-control@carlymx/applet.js:118
+msgid "ℹ  Acerca de"
+msgstr "ℹ  About"
+
+#: brightness-control@carlymx/applet.js:122
+msgid "Brightness Control v1.2.0\nAutor: carlymx"
+msgstr "Brightness Control v1.2.0\nAuthor: carlymx"
+
+#: brightness-control@carlymx/applet.js:465
+msgid "Brillo Control"
+msgstr "Brightness Control"
+
+#: brightness-control@carlymx/applet.js:466
+msgid "Modo de control manual de temperatura activado (User 1)"
+msgstr "Manual temperature control mode activated (User 1)"

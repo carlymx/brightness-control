@@ -37,5 +37,14 @@
     "max": 1,
     "step": 0.01,
     "description": "Última temperatura guardada"
+  },
+  "about": {
+    "type": "label",
+    "description": "Brightness Control v1.2.0\nAutor: carlymx\nGitHub: github.com/carlymx/brightness-control"
+  },
+  "open-github": {
+    "type": "button",
+    "description": "Abrir página del proyecto en GitHub",
+    "callback": "_onOpenGitHubClicked"
   }
 }
