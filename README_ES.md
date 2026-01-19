@@ -46,12 +46,49 @@ Applet de control de brillo para monitores de escritorio en Cinnamon Desktop con
 
 ## Instalación
 
+### Opción 1: Usar el Script de Instalación (Recomendado)
+
+```bash
+# Hacer el script ejecutable
+chmod +x install.sh
+
+# Ejecutar el instalador
+./install.sh
+
+# Seguir las instrucciones en pantalla
+```
+
+El instalador:
+- Detectará si tienes una instalación anterior
+- Ofrecerá opciones: backup, sobrescribir, eliminar anterior o salir
+- Instalará los archivos del applet
+- Opcionalmente instalará las traducciones (español/inglés/ambos)
+- Preguntará si quieres reiniciar Cinnamon automáticamente
+
+### Opción 2: Instalación Manual
+
 ```bash
 # Crear directorio del applet
 mkdir -p ~/.local/share/cinnamon/applets/brightness-control@carlymx
 
 # Copiar archivos
-cp metadata.json applet.js settings-schema.json stylesheet.css ~/.local/share/cinnamon/applets/brightness-control@carlymx/
+cp brightness-control@carlymx/* ~/.local/share/cinnamon/applets/brightness-control@carlymx/
+
+# Reiniciar Cinnamon
+cinnamon --replace &
+```
+
+### Opcional: Instalar Traducciones Manualmente
+
+```bash
+# Compilar traducciones
+msgfmt -o po/es/LC_MESSAGES/brightness-control@carlymx.mo po/es.po
+msgfmt -o po/en/LC_MESSAGES/brightness-control@carlymx.mo po/en.po
+
+# Instalar a locale
+mkdir -p ~/.local/share/locale/{es,en}/LC_MESSAGES
+cp po/es/LC_MESSAGES/brightness-control@carlymx.mo ~/.local/share/locale/es/LC_MESSAGES/
+cp po/en/LC_MESSAGES/brightness-control@carlymx.mo ~/.local/share/locale/en/LC_MESSAGES/
 
 # Reiniciar Cinnamon
 cinnamon --replace &
@@ -124,6 +161,15 @@ po/
 
 ### Instalar Traducciones
 
+La forma más fácil de instalar las traducciones es usando el script de instalación:
+
+```bash
+./install.sh
+# Cuando lo solicite, elegir instalar traducciones (español, inglés o ambos)
+```
+
+Alternativamente, compilar e instalar manualmente:
+
 ```bash
 # Compilar .po a .mo
 msgfmt -o po/es/LC_MESSAGES/brightness-control@carlymx.mo po/es.po
@@ -137,6 +183,23 @@ cp po/en/LC_MESSAGES/brightness-control@carlymx.mo ~/.local/share/locale/en/LC_M
 
 # Reiniciar Cinnamon
 cinnamon --replace &
+```
+
+### Opciones del Script install.sh
+
+El script `install.sh` ofrece las siguientes funcionalidades:
+
+| Opción | Descripción |
+|--------|-------------|
+| Detectar instalación anterior | Ofrecer backup/sobrescribir/eliminar/salir |
+| Selección de idioma | Español, Inglés o ambos |
+| Auto-reinicio | Opcionalmente reiniciar Cinnamon tras instalación |
+
+Uso:
+
+```bash
+chmod +x install.sh
+./install.sh
 ```
 
 ### Actualizar Traducciones

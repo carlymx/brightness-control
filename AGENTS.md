@@ -10,10 +10,29 @@ A Cinnamon applet for controlling monitor brightness and color temperature using
 
 ## Build/Install Commands
 
+### Using Install Script (Recommended)
+
 ```bash
-# Development installation
+# Make script executable
+chmod +x install.sh
+
+# Run installer
+./install.sh
+
+# Follow on-screen instructions:
+# - Detect previous installation (backup/overwrite/remove/exit)
+# - Select language (Spanish/English/both)
+# - Restart Cinnamon automatically or manually
+```
+
+### Manual Installation
+
+```bash
+# Create applet directory
 mkdir -p ~/.local/share/cinnamon/applets/brightness-control@carlymx
-cp metadata.json applet.js settings-schema.json stylesheet.css ~/.local/share/cinnamon/applets/brightness-control@carlymx/
+
+# Copy files
+cp brightness-control@carlymx/* ~/.local/share/cinnamon/applets/brightness-control@carlymx/
 
 # Restart Cinnamon to apply changes
 cinnamon --replace &
@@ -24,6 +43,22 @@ sudo usermod -aG i2c $USER
 
 # Verify ddcutil installation
 ddcutil getvcp 10  # Get current brightness
+```
+
+### Install Translations Manually
+
+```bash
+# Compile translations
+msgfmt -o po/es/LC_MESSAGES/brightness-control@carlymx.mo po/es.po
+msgfmt -o po/en/LC_MESSAGES/brightness-control@carlymx.mo po/en.po
+
+# Install to locale
+mkdir -p ~/.local/share/locale/{es,en}/LC_MESSAGES
+cp po/es/LC_MESSAGES/brightness-control@carlymx.mo ~/.local/share/locale/es/LC_MESSAGES/
+cp po/en/LC_MESSAGES/brightness-control@carlymx.mo ~/.local/share/locale/en/LC_MESSAGES/
+
+# Restart Cinnamon
+cinnamon --replace &
 ```
 
 ## Testing

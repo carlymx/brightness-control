@@ -46,12 +46,49 @@ Cinnamon Desktop applet for controlling monitor brightness and color temperature
 
 ## Installation
 
+### Option 1: Using the Install Script (Recommended)
+
+```bash
+# Make the script executable
+chmod +x install.sh
+
+# Run the installer
+./install.sh
+
+# Follow the on-screen instructions
+```
+
+The installer will:
+- Detect if you have a previous installation
+- Offer options: backup, overwrite, remove old, or exit
+- Install the applet files
+- Optionally install translations (Spanish/English/both)
+- Ask if you want to restart Cinnamon automatically
+
+### Option 2: Manual Installation
+
 ```bash
 # Create applet directory
 mkdir -p ~/.local/share/cinnamon/applets/brightness-control@carlymx
 
 # Copy files
-cp metadata.json applet.js settings-schema.json stylesheet.css ~/.local/share/cinnamon/applets/brightness-control@carlymx/
+cp brightness-control@carlymx/* ~/.local/share/cinnamon/applets/brightness-control@carlymx/
+
+# Restart Cinnamon
+cinnamon --replace &
+```
+
+### Optional: Install Translations Manually
+
+```bash
+# Compile translations
+msgfmt -o po/es/LC_MESSAGES/brightness-control@carlymx.mo po/es.po
+msgfmt -o po/en/LC_MESSAGES/brightness-control@carlymx.mo po/en.po
+
+# Install to locale
+mkdir -p ~/.local/share/locale/{es,en}/LC_MESSAGES
+cp po/es/LC_MESSAGES/brightness-control@carlymx.mo ~/.local/share/locale/es/LC_MESSAGES/
+cp po/en/LC_MESSAGES/brightness-control@carlymx.mo ~/.local/share/locale/en/LC_MESSAGES/
 
 # Restart Cinnamon
 cinnamon --replace &
@@ -124,6 +161,15 @@ po/
 
 ### Install Translations
 
+The easiest way to install translations is using the install script:
+
+```bash
+./install.sh
+# When prompted, choose to install translations (Spanish, English, or both)
+```
+
+Alternatively, manually compile and install:
+
 ```bash
 # Compile .po to .mo
 msgfmt -o po/es/LC_MESSAGES/brightness-control@carlymx.mo po/es.po
@@ -137,6 +183,23 @@ cp po/en/LC_MESSAGES/brightness-control@carlymx.mo ~/.local/share/locale/en/LC_M
 
 # Restart Cinnamon
 cinnamon --replace &
+```
+
+### Install Script Options
+
+The `install.sh` script provides the following features:
+
+| Option | Description |
+|--------|-------------|
+| Detect previous installation | Offers backup/overwrite/remove/exit options |
+| Language selection | Spanish, English, or both |
+| Auto-restart | Optionally restart Cinnamon after installation |
+
+Usage:
+
+```bash
+chmod +x install.sh
+./install.sh
 ```
 
 ### Update Translations
